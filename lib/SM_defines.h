@@ -95,6 +95,7 @@
 
     #include "WiFi.h"
     #include "PubSubClient.h"
+    #include "ESPAsyncWebServer.h"
 
     static WiFiServer telnetServer(23);
     static WiFiClient mqttWiFiClient;
