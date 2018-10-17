@@ -8,26 +8,40 @@
     #include "FS.h"
     #include <SPIFFS.h>
 
+    #include "httpSPIFFS.cpp"
 
     void callback(char* topic, byte* payload, unsigned int length);
 
     static void sm_start(void){
-        serialLog("entering: sm_start");
         #ifdef DEBUG
             Serial.begin(115200);
         #endif
+        serialLog("entering: sm_start");
         if(!SPIFFS.begin(true)){
             serialLogln("SPIFFS Mount failed...");
             sm_state = SM_UNRESOLVABLE_ERROR;
         }
+        httpServer.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
+            serialLogln("neuer Client auf :80");
+            request->send(200, "text/plain", "Hello World");
+        });
+
+        httpServer.on("/SPIFFS", HTTP_GET, handleSPIFFS);
+
+        httpServer.on("/UPLOAD", HTTP_POST, [](AsyncWebServerRequest * request) {
+            request->redirect("/SPIFFS");
+        }, handleUpload);
+
         sm_state = SM_WIFI_LOOK_FOR_DATA;
-        return;
-    }
+            return;
+        }
 
 
     static void sm_main_handle_mqtt(void){
         serialLog("entering: sm_main_handle_mqtt");
         
+        httpServer.begin();
+
         mqttClient.setCallback(callback);
 
         File file = SPIFFS.open(MQTT_FILE, "r");
