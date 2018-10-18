@@ -27,6 +27,7 @@
         });
 
         httpServer.on("/SPIFFS", HTTP_GET, handleSPIFFS);
+        httpServer.on("/UPDATE", HTTP_GET, handleUpdate);
 
         httpServer.on("/UPLOAD", HTTP_POST, [](AsyncWebServerRequest * request) {
             request->redirect("/SPIFFS");

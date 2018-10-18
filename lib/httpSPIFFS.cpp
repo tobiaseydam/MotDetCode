@@ -8,6 +8,8 @@
     #include "FS.h"
     #include <SPIFFS.h>
 
+    String processor(const String &var);
+
     void handleSPIFFS(AsyncWebServerRequest *request){
         File root = SPIFFS.open("/");
 
@@ -18,7 +20,7 @@
                 SPIFFS.remove(p->value());
             }
             if(p->name().equals("show")){
-                request->send(SPIFFS, p->value());
+                request->send(SPIFFS, p->value(), "text/html", false, processor);
                 return;
             }
         }
@@ -47,7 +49,29 @@
         }
         list += "</table></html>";
         request->send(200, "text/html", list);
-        
+    }
+
+    void handleUpdate(AsyncWebServerRequest *request){
+        int cntrParams = request->params();
+        if(cntrParams>0){
+            AsyncWebParameter *p = request->getParam(0);
+            if(p->name().equals("type")){
+                if(p->value().equals("wifi")){
+                    AsyncWebParameter *ssid = request->getParam(1);
+                    AsyncWebParameter *pass = request->getParam(2);
+                    
+                    fileSave_WiFi("/test_wifi.txt", ssid->value().c_str(), pass->value().c_str());
+                }else if(p->value().equals("mqtt")){
+                    AsyncWebParameter *server = request->getParam(1);
+                    AsyncWebParameter *user = request->getParam(2);
+                    AsyncWebParameter *pass = request->getParam(3);
+                    AsyncWebParameter *devname = request->getParam(4);
+                    
+                    fileSave_MQTT("/test_mqtt.txt", server->value().c_str(), user->value().c_str(), pass->value().c_str(), devname->value().c_str());
+                }
+            }
+        }
+        request->redirect("/SPIFFS");
     }
 
     void handleUpload(AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final) {
@@ -69,5 +93,25 @@
         }
     }
 
+    String processor(const String &var){
+
+        Serial.println(var);
+
+        if (var == "WIFI_SSID"){
+            return String(fileParseString(SPIFFS.open(WIFI_FILE, "r"),"ssid"));
+        }else if (var == "WIFI_PASS"){
+            return String(fileParseString(SPIFFS.open(WIFI_FILE, "r"),"pass"));
+        }else if (var == "MQTT_SERVER"){
+            return String(fileParseString(SPIFFS.open(MQTT_FILE, "r"),"server"));
+        }else if (var == "MQTT_USER"){
+            return String(fileParseString(SPIFFS.open(MQTT_FILE, "r"),"user"));
+        }else if (var == "MQTT_PASS"){
+            return String(fileParseString(SPIFFS.open(MQTT_FILE, "r"),"pass"));
+        }else if (var == "MQTT_DEVNAME"){
+            return String(fileParseString(SPIFFS.open(MQTT_FILE, "r"),"devName"));
+        }
+
+        return String();
+    }
 
 #endif
