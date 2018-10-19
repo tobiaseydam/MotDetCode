@@ -68,6 +68,12 @@
         return SPIFFS.exists(filename);
     }
 
+    static bool fileExist(String filename){
+        serialLog("looking for file...");
+
+        return SPIFFS.exists(filename);
+    }
+
     static char* fileParseString(File file, const char* key){
         
         char buffer[255];
@@ -106,6 +112,10 @@
             }
         }
         return NULL;
+    }
+
+    static bool fileValid(String filename){
+        return fileValid(filename.c_str());
     }
 
     static bool fileValid(const char* filename){
