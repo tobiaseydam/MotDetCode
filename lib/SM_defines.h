@@ -1,7 +1,7 @@
 #ifndef SM_DEFINES_H
     #define SM_DEFINES_H
 
-    #define NODEBUG
+    #define DEBUG
 
     static void runSM(void);
 
@@ -95,8 +95,10 @@
 
     #include "WiFi.h"
     #include "PubSubClient.h"
+    #include "ESPAsyncWebServer.h"
 
     static WiFiServer telnetServer(23);
+    static AsyncWebServer httpServer(80);
     static WiFiClient mqttWiFiClient;
     static PubSubClient mqttClient(mqttWiFiClient);
 
