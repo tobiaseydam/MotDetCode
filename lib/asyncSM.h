@@ -2,12 +2,20 @@
     #define ASYNCSM_H
 
     #include "ESPAsyncWebServer.h"
+    #include <WString.h>
 
     #define WIFI_FILE       "/wifi2.txt"
     #define WIFI_TIMEOUT    20
 
     class asyncSM{
         private:
+            struct wifiConfig {
+                String ssid;
+                String pass;
+            };
+
+            wifiConfig _wifiConfig;
+
             enum eSMState {
                 START, 
 
@@ -34,24 +42,26 @@
             eSMState _state = START;
             eSMRunningState _runningState = NOT_STARTED;
 
-            //AsyncWebServer _httpServer;
+            AsyncWebServer *_httpServer;
 
             void _nextStep();
-
             void _start();
-
             void _wifiLookForData();
             void _wifiLogin();
             void _wifiOpenAccessPoint();
             void _wifiWaitForConfig();
-
             void _mqttLookForData();
             void _mqttLogin();
-
             void _mainHandleMqtt();
+
+            void _loadWifiConfig();
+            void saveWifiConfig();
         public:
             void begin(void *pvParameter);
-            //void setServer(AsyncWebServer httpServer);
+            void setServer(AsyncWebServer httpServer);
+            void setWifiSSID(String ssid);
+            void setWifiPass(String pass);
+            void saveWifiConfig();
             asyncSM();
     };
 

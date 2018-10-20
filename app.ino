@@ -23,7 +23,7 @@ void setup()
 	foo.printTo(Serial);*/
 	asyncSM sm;
 	sm.begin(NULL);
-	httpServerBuilder::init();
+	httpServerBuilder::init(sm);
 	httpServer.begin();
 } 
 
