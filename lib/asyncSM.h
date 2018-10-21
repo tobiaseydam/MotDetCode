@@ -6,6 +6,8 @@
 
     #define WIFI_FILE       "/wifi2.txt"
     #define WIFI_TIMEOUT    20
+    #define WIFI_AP_SSID    "ESP32"
+    #define WIFI_AP_PASS    "MotDet"
 
     class asyncSM{
         private:
@@ -42,7 +44,7 @@
             eSMState _state = START;
             eSMRunningState _runningState = NOT_STARTED;
 
-            AsyncWebServer *_httpServer;
+            AsyncWebServer* _httpServer;
 
             void _nextStep();
             void _start();
@@ -55,7 +57,6 @@
             void _mainHandleMqtt();
 
             void _loadWifiConfig();
-            void saveWifiConfig();
         public:
             void begin(void *pvParameter);
             void setServer(AsyncWebServer httpServer);

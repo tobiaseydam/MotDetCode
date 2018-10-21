@@ -86,9 +86,9 @@ void asyncSM::_wifiLogin(){
 
     debug::logln("connectiong to:");
     debug::log("  SSID: ");
-    debug::logln(ssid);
+    debug::logln(_wifiConfig.ssid);
 
-    WiFi.begin(ssid.c_str(), pass.c_str());
+    WiFi.begin(_wifiConfig.ssid.c_str(), _wifiConfig.pass.c_str());
     long t0 = millis();
 
     while(WiFi.status() != WL_CONNECTED){
@@ -101,20 +101,27 @@ void asyncSM::_wifiLogin(){
     }
     debug::logln("WiFi connected.");
     debug::log("  IP: ");
-    debug::logln(WiFi.localIP());
+    debug::logln(WiFi.localIP().toString());
     _state = MQTT_LOOK_FOR_DATA;
     return;
 }
 
 void asyncSM::_wifiOpenAccessPoint(){
     debug::logln("entering: sm_wifi_open_accesspoint");
-    WiFi.softAP(WIFI_AP_SSID, WIFI_AP_PASS);
+    const char *ssid = "WIFI_AP_SSID";
+    const char *pass = "WIFI_AP_PASS";
+    delay(1000);
+    WiFi.mode(WIFI_AP_STA);
+    WiFi.begin(ssid);
+    delay(1000);
     _state = WIFI_WAIT_FOR_CONFIG;
+    Serial.println(WiFi.localIP());
     return;
 }
 
 void asyncSM::_wifiWaitForConfig(){
-    _httpServer.begin();
+    debug::logln("entering: sm_wifi_wait_for_config");
+    _httpServer->begin();
     _runningState = PAUSED;
 }
 
@@ -132,8 +139,8 @@ void asyncSM::_mainHandleMqtt(){
 
 void asyncSM::_loadWifiConfig(){
     JsonObject& wifidata = tools::loadJsonFile(WIFI_FILE);
-    _wifiConfig.ssid = wifidata["SSID"];
-    _wifiConfig.pass = wifidata["PASS"];
+    _wifiConfig.ssid = wifidata["SSID"].as<String>();
+    _wifiConfig.pass = wifidata["PASS"].as<String>();
 }
 
 void asyncSM::saveWifiConfig(){

@@ -22,9 +22,9 @@ void setup()
 	JsonObject& foo = tools::loadJsonFile("/test.txt");
 	foo.printTo(Serial);*/
 	asyncSM sm;
+	httpServerBuilder::init(&sm);
 	sm.begin(NULL);
-	httpServerBuilder::init(sm);
-	httpServer.begin();
+	//httpServer.begin();
 } 
 
 void loop()

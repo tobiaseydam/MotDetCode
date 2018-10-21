@@ -19,7 +19,7 @@ void debug::log(String s, int dbglvl){
 }
 
 void debug::logln(String s){
-    log(s,1);
+    logln(s,1);
 }
 
 void debug::logln(String s, int dbglvl){

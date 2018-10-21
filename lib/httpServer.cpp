@@ -3,8 +3,10 @@
 #include "debug.h"
 #include "SPIFFS.h"
 #include "FS.h"
+#include "asyncSM.h"
 
-void httpServerBuilder::init(asyncSM sm){
+void httpServerBuilder::init(asyncSM* sm){
+    sm->setServer(httpServer);
     httpServer.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
         debug::logln("neuer Client auf :80");
         request->send(200, "text/plain", "Hello World");
@@ -68,9 +70,9 @@ void httpServerBuilder::_handleUpdate(AsyncWebServerRequest *request){
             if(p->value().equals("wifi")){
                 AsyncWebParameter *ssid = request->getParam(1);
                 AsyncWebParameter *pass = request->getParam(2);
-                sm.setWifiSSID(ssid->value());
-                sm.setWifiPass(pass->value());
-                sm.saveWifiConfig();
+                _asyncSM->setWifiSSID(ssid->value());
+                _asyncSM->setWifiPass(pass->value());
+                _asyncSM->saveWifiConfig();
                 //fileSave_WiFi("/test_wifi.txt", ssid->value().c_str(), pass->value().c_str());
             }else if(p->value().equals("mqtt")){
                 AsyncWebParameter *server = request->getParam(1);
