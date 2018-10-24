@@ -4,7 +4,9 @@
 void tools::init(){
 	if(!SPIFFS.begin(true)){
         debug::logln("SPIFFS mount failed...");
-	}
+	}else{
+        debug::logln("SPIFFS mounted...");
+    }
 }
 
 void tools::saveJsonFile(String filename, JsonObject *json){
@@ -18,7 +20,7 @@ void tools::saveJsonFile(String filename, JsonObject *json){
 
 JsonObject& tools::loadJsonFile(String filename){
     debug::log("loading JSON file: ", 2);
-    debug::log(filename,2);
+    debug::logln(filename,2);
     File file = SPIFFS.open(filename, "r");
     DynamicJsonBuffer jsonBuffer;
     if(!file){

@@ -3,8 +3,7 @@
 #include "lib/asyncSM.cpp"
 #include "lib/httpServer.cpp"
 #include <ArduinoJson.h>
-
-//DynamicJsonBuffer jsonBuffer;
+#include "lib/mqttServer.cpp"
 
 
 
@@ -21,15 +20,18 @@ void setup()
 
 	JsonObject& foo = tools::loadJsonFile("/test.txt");
 	foo.printTo(Serial);*/
-	asyncSM sm;
-	httpServerBuilder::init(&sm);
-	sm.begin(NULL);
-	//httpServer.begin();
+
+
+	asyncSM *sm = new asyncSM();
+	httpServerBuilder::init(sm);
+	mqttServerBuilder::init(sm);
+	sm->begin(NULL);
+	delay(5000);
 } 
 
 void loop()
 {
-	debug::logln("x");
-	delay(1000);
+	//debug::logln("x");
+	//delay(100);
 
 }

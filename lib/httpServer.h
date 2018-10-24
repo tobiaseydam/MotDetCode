@@ -5,7 +5,7 @@
     #include "ESPAsyncWebServer.h"
     #include "asyncSM.h"
 
-    static AsyncWebServer httpServer(80);
+    static AsyncWebServer *httpServer = new AsyncWebServer(80);
     static asyncSM* _asyncSM;
 
     class httpServerBuilder{
