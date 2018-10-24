@@ -1,8 +1,8 @@
 #ifndef DEBUG_H
     #define DEBUG_H
 
+    #include <Arduino.h>
     #include <WString.h>
-
     /*
      *  0   keine Debugausgaben
      *  1   wenig Debugausgaben

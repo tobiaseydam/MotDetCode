@@ -8,6 +8,8 @@
 #include "debug.h"
 #include "tools.h"
 
+asyncSM* asyncSM::asyncSMInstance;
+
 void asyncSM::begin(void *pvParameter){
     _nextStep();
 }
@@ -16,13 +18,23 @@ void asyncSM::setHttpServer(AsyncWebServer *httpServer){
     _httpServer = httpServer;
 }
 
-void asyncSM::setMqttServer(AsyncMqttClient *mqttServer){
-    _mqttServer = mqttServer;
+AsyncWebServer *asyncSM::getHttpServer(){
+    return _httpServer;
+}
+
+void asyncSM::setMqttClient(AsyncMqttClient *mqttClient){
+    _mqttClient = mqttClient;
+}
+
+AsyncMqttClient *asyncSM::getMqttClient(){
+    return _mqttClient;
 }
 
 asyncSM::asyncSM(void){
     debug::init();
     tools::init();
+    _httpServer = new AsyncWebServer(80);
+    _mqttClient = new AsyncMqttClient();
 }
 
 void asyncSM::_nextStep(){

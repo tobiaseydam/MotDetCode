@@ -4,6 +4,7 @@
     #include "ESPAsyncWebServer.h"
     #include <AsyncMqttClient.h>
     #include <WString.h>
+    #include "debug.h"
 
     #define WIFI_FILE       "/wifi.txt"
     #define MQTT_FILE       "/mqtt.txt"
@@ -58,7 +59,7 @@
             eSMRunningState _runningState = NOT_STARTED;
 
             AsyncWebServer* _httpServer;
-            AsyncMqttClient* _mqttServer;
+            AsyncMqttClient* _mqttClient;
 
             void _nextStep();
             void _start();
@@ -71,10 +72,15 @@
             void _mainHandleMqtt();
             void _loadWifiConfig();
             void _loadMqttConfig();
+
+            static asyncSM* asyncSMInstance;
         public:
+            static asyncSM* getInstance() {return asyncSMInstance;}
             void begin(void *pvParameter);
             void setHttpServer(AsyncWebServer *httpServer);
-            void setMqttServer(AsyncMqttClient *mqttServer);
+            AsyncWebServer *getHttpServer();
+            void setMqttClient(AsyncMqttClient *mqttClient);
+            AsyncMqttClient *getMqttClient();
             void setWifiSSID(String ssid);
             void setWifiPass(String pass);
             void saveWifiConfig();

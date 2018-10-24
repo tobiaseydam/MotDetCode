@@ -5,6 +5,7 @@
     #include <WString.h>
     #include <SPIFFS.h>
     #include <FS.h>
+    #include "debug.h"
 
     class tools{
         public:

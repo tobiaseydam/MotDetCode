@@ -2,9 +2,13 @@
     #define MQTTSERVER_H
 
     #include <AsyncMqttClient.h>
+    #include "debug.h"
+    #include "asyncSM.h"
 
-    static AsyncMqttClient* _mqttClient = new AsyncMqttClient();;
-    //static asyncSM* _asyncSM;
+    //static AsyncMqttClient* _mqttClient = new AsyncMqttClient();;
+    //asyncSM* _asyncSM;
+    
+    //extern AsyncMqttClient *_mqttClient;
 
     class mqttServerBuilder{
         private:
@@ -20,7 +24,7 @@
             static void _onMqttPublish(uint16_t packetId);
 
         public:
-            static void init(asyncSM* sm);
+            static void init();
     };
 
 #endif

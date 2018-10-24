@@ -3,10 +3,9 @@
 #include "debug.h"
 #include "SPIFFS.h"
 #include "FS.h"
-#include "asyncSM.h"
 
-void httpServerBuilder::init(asyncSM* sm){
-    sm->setHttpServer(httpServer);
+void httpServerBuilder::init(){
+    AsyncWebServer *httpServer = asyncSM::getInstance()->getHttpServer();
     httpServer->on("/", HTTP_GET, [](AsyncWebServerRequest *request){
         debug::logln("neuer Client auf :80");
         request->send(200, "text/plain", "Hello World");
@@ -18,7 +17,7 @@ void httpServerBuilder::init(asyncSM* sm){
     httpServer->on("/UPLOAD", HTTP_POST, [](AsyncWebServerRequest * request) {
         request->redirect("/SPIFFS");
     }, _handleUpload);
-    _asyncSM = sm;
+    //_asyncSM = sm;
 }
 
 void httpServerBuilder::_handleSPIFFS(AsyncWebServerRequest *request){
@@ -70,9 +69,9 @@ void httpServerBuilder::_handleUpdate(AsyncWebServerRequest *request){
             if(p->value().equals("wifi")){
                 AsyncWebParameter *ssid = request->getParam(1);
                 AsyncWebParameter *pass = request->getParam(2);
-                _asyncSM->setWifiSSID(ssid->value());
-                _asyncSM->setWifiPass(pass->value());
-                _asyncSM->saveWifiConfig();
+                asyncSM::getInstance()->setWifiSSID(ssid->value());
+                asyncSM::getInstance()->setWifiPass(pass->value());
+                asyncSM::getInstance()->saveWifiConfig();
                 request->redirect("/SPIFFS");
                 ESP.restart();
             }else if(p->value().equals("mqtt")){
@@ -80,11 +79,11 @@ void httpServerBuilder::_handleUpdate(AsyncWebServerRequest *request){
                 AsyncWebParameter *user = request->getParam(2);
                 AsyncWebParameter *pass = request->getParam(3);
                 AsyncWebParameter *devname = request->getParam(4);
-                _asyncSM->setMqttServer(server->value());
-                _asyncSM->setMqttUser(user->value());
-                _asyncSM->setMqttPass(pass->value());
-                _asyncSM->setMqttDevName(devname->value());
-                _asyncSM->saveMqttConfig();
+                asyncSM::getInstance()->setMqttServer(server->value());
+                asyncSM::getInstance()->setMqttUser(user->value());
+                asyncSM::getInstance()->setMqttPass(pass->value());
+                asyncSM::getInstance()->setMqttDevName(devname->value());
+                asyncSM::getInstance()->saveMqttConfig();
                 request->redirect("/SPIFFS");
                 ESP.restart();
             }
@@ -111,17 +110,17 @@ void httpServerBuilder::_handleUpload(AsyncWebServerRequest *request, String fil
 
 String httpServerBuilder::_processor(const String &var){
     if (var == "WIFI_SSID"){
-        return _asyncSM->getWifiSSID();
+        return asyncSM::getInstance()->getWifiSSID();
     }else if (var == "WIFI_PASS"){
-        return _asyncSM->getWifiPass();
+        return asyncSM::getInstance()->getWifiPass();
     }else if (var == "MQTT_SERVER"){
-        return _asyncSM->getMqttServer();
+        return asyncSM::getInstance()->getMqttServer();
     }else if (var == "MQTT_USER"){
-        return _asyncSM->getMqttUser();
+        return asyncSM::getInstance()->getMqttUser();
     }else if (var == "MQTT_PASS"){
-        return _asyncSM->getMqttPass();
+        return asyncSM::getInstance()->getMqttPass();
     }else if (var == "MQTT_DEVNAME"){
-        return _asyncSM->getMqttDevName();
+        return asyncSM::getInstance()->getMqttDevName();
     }
 
     return String();

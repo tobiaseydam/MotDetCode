@@ -1,11 +1,11 @@
 #include "tools.h"
-#include "debug.h"
+
 
 void tools::init(){
 	if(!SPIFFS.begin(true)){
-        debug::logln("SPIFFS mount failed...");
+        debug::logln("SPIFFS mount failed...", 2);
 	}else{
-        debug::logln("SPIFFS mounted...");
+        debug::logln("SPIFFS mounted..." , 2);
     }
 }
 
@@ -27,8 +27,8 @@ JsonObject& tools::loadJsonFile(String filename){
         debug::logln(" not found", 2);
         return jsonBuffer.createObject();
     }else{
-        return jsonBuffer.parseObject(file);
         debug::logln(" done", 2);
+        return jsonBuffer.parseObject(file);
     }
 }
 
