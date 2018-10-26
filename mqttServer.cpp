@@ -73,7 +73,11 @@ void mqttServerBuilder::_onMqttPublish(uint16_t packetId) {
 }
 
 void mqttServerBuilder::init(){
-    asyncSM::getInstance()->getMqttClient()->setServer(IPAddress(192, 168, 178, 23), 1883);
+    asyncSM *sm = asyncSM::getInstance();
+    AsyncMqttClient *client = sm->getMqttClient();
+
+    IPAddress ip = tools::strToIP(sm->getMqttServer());
+    client->setServer(ip, 1883);
     asyncSM::getInstance()->getMqttClient()->onConnect(_onMqttConnect);
     asyncSM::getInstance()->getMqttClient()->onDisconnect(_onMqttDisconnect);
     asyncSM::getInstance()->getMqttClient()->onSubscribe(_onMqttSubscribe);

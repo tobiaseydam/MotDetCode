@@ -10,6 +10,13 @@
 
 asyncSM* asyncSM::asyncSMInstance;
 
+asyncSM* asyncSM::getInstance(){
+    if(!asyncSMInstance){
+        asyncSMInstance = new asyncSM();
+    }
+    return asyncSMInstance;
+}
+
 void asyncSM::begin(void *pvParameter){
     _nextStep();
 }
@@ -35,6 +42,8 @@ asyncSM::asyncSM(void){
     tools::init();
     _httpServer = new AsyncWebServer(80);
     _mqttClient = new AsyncMqttClient();
+    _hardware = new HardwareList();
+    Serial.println("AsyncSM created");
 }
 
 void asyncSM::_nextStep(){
@@ -72,6 +81,7 @@ void asyncSM::_start(){
         debug::logln("entering: sm_start");
         _runningState = RUNNING;
         _state = WIFI_LOOK_FOR_DATA;
+        Serial.println(getHardwareInfo());
 }
 
 void asyncSM::_wifiLookForData(){
@@ -119,7 +129,6 @@ void asyncSM::_wifiLogin(){
     debug::log("  IP: ");
     debug::logln(WiFi.localIP().toString());
     _httpServer->begin();
-    _runningState = PAUSED;
     _state = MQTT_LOOK_FOR_DATA;
     return;
 }
@@ -165,7 +174,21 @@ void asyncSM::_mqttLookForData(){
 }
 
 void asyncSM::_mqttLogin(){
-
+    _mqttClient->setCredentials("pi", "raspberry");
+    _mqttClient->connect();
+    delay(1000);
+    debug::logln(_hardware->getElement(2)->getMqttTopic().c_str());
+    debug::logln(((HardwareTele*)_hardware->getElement(2))->getValue().c_str());
+    uint16_t packetIdPub1 = _mqttClient->publish(
+        _hardware->getElement(2)->getMqttTopic().c_str(),
+        1,
+        true,
+        ((HardwareTele*)_hardware->getElement(2))->getValue().c_str()
+    );
+    Serial.print("Publishing at QoS 1, packetId: ");
+    Serial.println(packetIdPub1);
+    _runningState = PAUSED;
+    return;
 }
 
 void asyncSM::_mainHandleMqtt(){
@@ -187,7 +210,7 @@ void asyncSM::_loadMqttConfig(){
     strncpy(_mqttConfig.user, mqttdata["USER"], sizeof(_mqttConfig.user));
     strncpy(_mqttConfig.pass, mqttdata["PASS"], sizeof(_mqttConfig.pass));
     strncpy(_mqttConfig.devname, mqttdata["DEVNAME"], sizeof(_mqttConfig.devname));
-    _wifiConfig.loaded = true;
+    _mqttConfig.loaded = true;
 }
 
 void asyncSM::saveWifiConfig(){
@@ -267,5 +290,42 @@ void asyncSM::setMqttDevName(String devname){
 String asyncSM::getMqttDevName(){
     _loadMqttConfig();
     String res = _mqttConfig.devname;
+    return res;
+}
+
+String asyncSM::getHardwareInfo(){
+    String res = "";
+    res += "Hardware info: \n";
+    for (int i = 0; i<_hardware->getLen(); i++){
+        HardwareIO* h = _hardware->getElement(i);
+        res += "Element: " + h->getName() + "\n";
+        res += "  Type: ";
+        if(h->getType() == RELAY)
+            res += "RELAY\n";
+        else if(h->getType() == INPUT230V)
+            res += "INPUT230V\n";
+        else if(h->getType() == TELEMETRY)
+            res += "TELEMETRY\n";
+        res += "  MQTT-Topic: " + h->getMqttTopic() + "\n";
+        res += "  Desc: " + h->getWebDesc() + "\n";       
+    }
+    return res;
+}
+
+String asyncSM::getWebHardwareInfo(){
+    String res = "<table><tr><td>Element</td><td>Type</td><td>MQTT-Topic</td><td>Beschreibung</td></tr>\n";
+    for (int i = 0; i<_hardware->getLen(); i++){
+        HardwareIO* h = _hardware->getElement(i);
+        res += "<tr><td>" + h->getName() + "</td><td>";
+        if(h->getType() == RELAY)
+            res += "RELAY";
+        else if(h->getType() == INPUT230V)
+            res += "INPUT230V";
+        else if(h->getType() == TELEMETRY)
+            res += "TELEMETRY";
+        res += "</td><td>" + h->getMqttTopic();
+        res += "</td><td>" + h->getWebDesc() + "</td></tr>\n";       
+    }
+    res += "</table>";
     return res;
 }

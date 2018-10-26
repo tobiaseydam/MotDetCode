@@ -40,3 +40,9 @@ bool tools::fileExist(String filename){
     }
     return true;
 }
+
+IPAddress tools::strToIP(String str){
+    uint8_t ip[4];
+    sscanf(str.c_str(), "%u.%u.%u.%u", &ip[0], &ip[1], &ip[2], &ip[3]);
+    return IPAddress(ip[0],ip[1],ip[2],ip[3]);
+}

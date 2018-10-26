@@ -121,6 +121,8 @@ String httpServerBuilder::_processor(const String &var){
         return asyncSM::getInstance()->getMqttPass();
     }else if (var == "MQTT_DEVNAME"){
         return asyncSM::getInstance()->getMqttDevName();
+    }else if (var == "HARDWAREINFO"){
+        return asyncSM::getInstance()->getWebHardwareInfo();
     }
 
     return String();

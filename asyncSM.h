@@ -5,6 +5,7 @@
     #include <AsyncMqttClient.h>
     #include <WString.h>
     #include "debug.h"
+    #include "hardwareManager.h"
 
     #define WIFI_FILE       "/wifi.txt"
     #define MQTT_FILE       "/mqtt.txt"
@@ -60,6 +61,7 @@
 
             AsyncWebServer* _httpServer;
             AsyncMqttClient* _mqttClient;
+            HardwareList* _hardware;
 
             void _nextStep();
             void _start();
@@ -75,26 +77,35 @@
 
             static asyncSM* asyncSMInstance;
         public:
-            static asyncSM* getInstance() {return asyncSMInstance;}
+            static asyncSM* getInstance();
+            
             void begin(void *pvParameter);
+            
             void setHttpServer(AsyncWebServer *httpServer);
             AsyncWebServer *getHttpServer();
+            
             void setMqttClient(AsyncMqttClient *mqttClient);
             AsyncMqttClient *getMqttClient();
+            
+            void saveWifiConfig();
+            void saveMqttConfig();
+            
             void setWifiSSID(String ssid);
             void setWifiPass(String pass);
-            void saveWifiConfig();
             void setMqttServer(String server);
             void setMqttUser(String user);
             void setMqttPass(String pass);
             void setMqttDevName(String devname);
-            void saveMqttConfig();
+            
             String getWifiSSID();
             String getWifiPass();
             String getMqttServer();
             String getMqttUser();
             String getMqttPass();
             String getMqttDevName();
+
+            String getHardwareInfo();
+            String getWebHardwareInfo();
 
             asyncSM();
     };

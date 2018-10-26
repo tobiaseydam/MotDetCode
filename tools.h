@@ -13,6 +13,7 @@
             static void saveJsonFile(String filename, JsonObject *json);
             static JsonObject& loadJsonFile(String filename);
             static bool fileExist(String filename);
+            static IPAddress strToIP(String str);
     };
 
 #endif

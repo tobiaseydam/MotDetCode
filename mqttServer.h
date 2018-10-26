@@ -4,12 +4,8 @@
     #include <AsyncMqttClient.h>
     #include "debug.h"
     #include "asyncSM.h"
-
-    //static AsyncMqttClient* _mqttClient = new AsyncMqttClient();;
-    //asyncSM* _asyncSM;
+    #include "tools.h"
     
-    //extern AsyncMqttClient *_mqttClient;
-
     class mqttServerBuilder{
         private:
             TimerHandle_t mqttReconnectTimer;
