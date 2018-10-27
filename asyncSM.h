@@ -4,6 +4,7 @@
     #include "ESPAsyncWebServer.h"
     #include <AsyncMqttClient.h>
     #include <WString.h>
+    #include <Ticker.h>
     #include "debug.h"
     #include "hardwareManager.h"
 
@@ -61,7 +62,9 @@
 
             AsyncWebServer* _httpServer;
             AsyncMqttClient* _mqttClient;
-            HardwareList* _hardware;
+            
+
+            Ticker* _mqttTimer = new Ticker();
 
             void _nextStep();
             void _start();
@@ -74,9 +77,11 @@
             void _mainHandleMqtt();
             void _loadWifiConfig();
             void _loadMqttConfig();
+            static void _handleTeleHardware();
 
             static asyncSM* asyncSMInstance;
         public:
+            HardwareList* _hardware;
             static asyncSM* getInstance();
             
             void begin(void *pvParameter);
@@ -103,6 +108,9 @@
             String getMqttUser();
             String getMqttPass();
             String getMqttDevName();
+            String getMqttTimerIntervall();
+            int getMqttTimerIntervallSeconds();
+            Ticker* getMqttTimer();
 
             String getHardwareInfo();
             String getWebHardwareInfo();

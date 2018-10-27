@@ -176,17 +176,7 @@ void asyncSM::_mqttLookForData(){
 void asyncSM::_mqttLogin(){
     _mqttClient->setCredentials("pi", "raspberry");
     _mqttClient->connect();
-    delay(1000);
-    debug::logln(_hardware->getElement(2)->getMqttTopic().c_str());
-    debug::logln(((HardwareTele*)_hardware->getElement(2))->getValue().c_str());
-    uint16_t packetIdPub1 = _mqttClient->publish(
-        _hardware->getElement(2)->getMqttTopic().c_str(),
-        1,
-        true,
-        ((HardwareTele*)_hardware->getElement(2))->getValue().c_str()
-    );
-    Serial.print("Publishing at QoS 1, packetId: ");
-    Serial.println(packetIdPub1);
+    _mqttTimer->attach(getMqttTimerIntervallSeconds(), _handleTeleHardware); 
     _runningState = PAUSED;
     return;
 }
@@ -211,6 +201,19 @@ void asyncSM::_loadMqttConfig(){
     strncpy(_mqttConfig.pass, mqttdata["PASS"], sizeof(_mqttConfig.pass));
     strncpy(_mqttConfig.devname, mqttdata["DEVNAME"], sizeof(_mqttConfig.devname));
     _mqttConfig.loaded = true;
+}
+
+void asyncSM::_handleTeleHardware(){
+    if(true){
+        HardwareList* _hwl = asyncSM::getInstance()->_hardware;
+        for(int i = 0; i < _hwl->getLen(); i++){
+            HardwareIO* h = _hwl->getElement(i);
+            if(h->getType() == TELEMETRY){
+                HardwareTele* t = (HardwareTele*)h;
+                asyncSM::getInstance()->_mqttClient->publish(t->getMqttTopic().c_str(), 1, true, t->getValue().c_str());
+            }
+        }
+    }
 }
 
 void asyncSM::saveWifiConfig(){
@@ -291,6 +294,18 @@ String asyncSM::getMqttDevName(){
     _loadMqttConfig();
     String res = _mqttConfig.devname;
     return res;
+}
+
+String asyncSM::getMqttTimerIntervall(){
+    return String(getMqttTimerIntervallSeconds());
+}
+
+int asyncSM::getMqttTimerIntervallSeconds(){
+    return 10;
+}
+
+Ticker* asyncSM::getMqttTimer(){
+    return _mqttTimer;
 }
 
 String asyncSM::getHardwareInfo(){

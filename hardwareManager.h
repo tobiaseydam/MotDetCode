@@ -53,7 +53,7 @@
 
     class HardwareList{
         protected:
-            static const int _len = 3;
+            static const int _len = 4;
             HardwareIO* _list[_len];
         public:
             int getLen();

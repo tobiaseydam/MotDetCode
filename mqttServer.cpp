@@ -24,6 +24,16 @@ void mqttServerBuilder::_onMqttConnect(bool sessionPresent) {
     uint16_t packetIdPub2 = asyncSM::getInstance()->getMqttClient()->publish("test/lol", 2, true, "test 3");
     Serial.print("Publishing at QoS 2, packetId: ");
     Serial.println(packetIdPub2);
+
+    HardwareList* _hwl = asyncSM::getInstance()->_hardware;
+    AsyncMqttClient* _m = asyncSM::getInstance()->getMqttClient();
+    for(int i = 0; i < _hwl->getLen(); i++){
+        HardwareIO* _hio = _hwl->getElement(i);
+        if(_hio->getType() == RELAY){
+            HardwareRelay* _hr = (HardwareRelay*)_hio;
+            _m->subscribe(_hr->getMqttTopic().c_str(), 2);
+        }
+    }
 }
 
 void mqttServerBuilder::_onMqttDisconnect(AsyncMqttClientDisconnectReason reason) {

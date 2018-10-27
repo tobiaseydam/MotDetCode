@@ -1,5 +1,17 @@
 #include "hardwareManager.h"
 
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+uint8_t temprature_sens_read();
+//uint8_t g_phyFuns;
+
+#ifdef __cplusplus
+}
+#endif
+
 String HardwareIO::getName(){
     return _name;
 }
@@ -72,6 +84,7 @@ HardwareList::HardwareList(){
     _list[0] = new HardwareRelay(16, "Relais 1", "relay1");
     _list[1] = new HardwareRelay(17, "Relais 2", "relay2");
     _list[2] = new HardwareTele("RSSI", "rssi", [](){return String(WiFi.RSSI());}, "WiFi-Signalstaerke");
+    _list[3] = new HardwareTele("Temperatur", "temperature", [](){return String((temprature_sens_read()-32)/1.8);}, "WiFi-Signalstaerke");
 }
 
 int HardwareList::getLen(){
