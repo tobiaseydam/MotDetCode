@@ -65,6 +65,7 @@
             
 
             Ticker* _mqttTimer = new Ticker();
+            Ticker* _mqttTimer2 = new Ticker();
 
             void _nextStep();
             void _start();
@@ -78,6 +79,7 @@
             void _loadWifiConfig();
             void _loadMqttConfig();
             static void _handleTeleHardware();
+            static void _handleSensorHardware();
 
             static asyncSM* asyncSMInstance;
         public:

@@ -74,6 +74,22 @@ void mqttServerBuilder::_onMqttMessage(char* topic, char* payload, AsyncMqttClie
     Serial.println(index);
     Serial.print("  total: ");
     Serial.println(total);
+
+    HardwareList* _hwl = asyncSM::getInstance()->_hardware;
+    AsyncMqttClient* _m = asyncSM::getInstance()->getMqttClient();
+
+    for(int i = 0; i<_hwl->getLen(); i++){
+        HardwareIO* _hio = _hwl->getElement(i);
+        if(strcmp(_hio->getMqttTopic().c_str(), topic)==0){
+            Serial.print("Set ");
+            Serial.print(_hio->getName());
+            Serial.print(" to ");
+            Serial.println(payload);
+            if(_hio->getType()==RELAY){
+                ((HardwareRelay*)_hio)->setStringState(payload);
+            }
+        }
+    }
 }
 
 void mqttServerBuilder::_onMqttPublish(uint16_t packetId) {

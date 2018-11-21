@@ -81,7 +81,7 @@ void asyncSM::_start(){
         debug::logln("entering: sm_start");
         _runningState = RUNNING;
         _state = WIFI_LOOK_FOR_DATA;
-        Serial.println(getHardwareInfo());
+        //Serial.println(getHardwareInfo());
 }
 
 void asyncSM::_wifiLookForData(){
@@ -174,9 +174,11 @@ void asyncSM::_mqttLookForData(){
 }
 
 void asyncSM::_mqttLogin(){
+    debug::logln("entering: sm_mqtt_login");
     _mqttClient->setCredentials("pi", "raspberry");
     _mqttClient->connect();
     _mqttTimer->attach(getMqttTimerIntervallSeconds(), _handleTeleHardware); 
+    _mqttTimer2->attach(1, _handleSensorHardware); 
     _runningState = PAUSED;
     return;
 }
@@ -211,6 +213,28 @@ void asyncSM::_handleTeleHardware(){
             if(h->getType() == TELEMETRY){
                 HardwareTele* t = (HardwareTele*)h;
                 asyncSM::getInstance()->_mqttClient->publish(t->getMqttTopic().c_str(), 1, true, t->getValue().c_str());
+            }
+            if(h->getType() == ONEWIRE){
+                Hardware1WireSensor* t = (Hardware1WireSensor*)h;
+                Serial.println(t->getMqttTopic().c_str());
+                Serial.println(t->getValue().c_str());
+                asyncSM::getInstance()->_mqttClient->publish(t->getMqttTopic().c_str(), 1, true, t->getValue().c_str());
+            }
+        }
+    }
+}
+
+void asyncSM::_handleSensorHardware(){
+    if(true){
+        HardwareList* _hwl = asyncSM::getInstance()->_hardware;
+        for(int i = 0; i < _hwl->getLen(); i++){
+            HardwareIO* h = _hwl->getElement(i);
+            if(h->getType() == INPUT230V){
+                Hardware230VSensor* t = (Hardware230VSensor*)h;
+                t->read();
+                if(t->hasChanged()){
+                    asyncSM::getInstance()->_mqttClient->publish(t->getMqttTopic().c_str(), 1, true, t->getValue().c_str());
+                }
             }
         }
     }
