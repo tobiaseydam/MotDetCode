@@ -210,15 +210,10 @@ void asyncSM::_handleTeleHardware(){
         HardwareList* _hwl = asyncSM::getInstance()->_hardware;
         for(int i = 0; i < _hwl->getLen(); i++){
             HardwareIO* h = _hwl->getElement(i);
-            if(h->getType() == TELEMETRY){
-                HardwareTele* t = (HardwareTele*)h;
-                asyncSM::getInstance()->_mqttClient->publish(t->getMqttTopic().c_str(), 1, true, t->getValue().c_str());
-            }
-            if(h->getType() == ONEWIRE){
-                Hardware1WireSensor* t = (Hardware1WireSensor*)h;
-                Serial.println(t->getMqttTopic().c_str());
-                Serial.println(t->getValue().c_str());
-                asyncSM::getInstance()->_mqttClient->publish(t->getMqttTopic().c_str(), 1, true, t->getValue().c_str());
+            if(h->isConstUpdate()){
+                Serial.println(h->getMqttTopic().c_str());
+                Serial.println(h->getTxtState().c_str());
+                asyncSM::getInstance()->_mqttClient->publish(h->getMqttTopic().c_str(), 1, true, h->getTxtState().c_str());
             }
         }
     }
@@ -230,10 +225,9 @@ void asyncSM::_handleSensorHardware(){
         for(int i = 0; i < _hwl->getLen(); i++){
             HardwareIO* h = _hwl->getElement(i);
             if(h->getType() == INPUT230V){
-                Hardware230VSensor* t = (Hardware230VSensor*)h;
-                t->read();
+                HardwareDigitalSensorPin* t = (HardwareDigitalSensorPin*)h;
                 if(t->hasChanged()){
-                    asyncSM::getInstance()->_mqttClient->publish(t->getMqttTopic().c_str(), 1, true, t->getValue().c_str());
+                    asyncSM::getInstance()->_mqttClient->publish(t->getMqttTopic().c_str(), 1, true, t->getTxtState().c_str());
                 }
             }
         }
@@ -345,15 +339,9 @@ String asyncSM::getHardwareInfo(){
     for (int i = 0; i<_hardware->getLen(); i++){
         HardwareIO* h = _hardware->getElement(i);
         res += "Element: " + h->getName() + "\n";
-        res += "  Type: ";
-        if(h->getType() == RELAY)
-            res += "RELAY\n";
-        else if(h->getType() == INPUT230V)
-            res += "INPUT230V\n";
-        else if(h->getType() == TELEMETRY)
-            res += "TELEMETRY\n";
+        res += "  Type: " + h->getTxtType() + "\n";
         res += "  MQTT-Topic: " + h->getMqttTopic() + "\n";
-        res += "  Desc: " + h->getWebDesc() + "\n";       
+        res += "  Desc: " + h->getTxtDesc() + "\n";       
     }
     return res;
 }
@@ -362,17 +350,12 @@ String asyncSM::getWebHardwareInfo(){
     String res = "<table><tr><td>Element</td><td>Type</td><td>MQTT-Topic</td><td>Beschreibung</td></tr>\n";
     for (int i = 0; i<_hardware->getLen(); i++){
         HardwareIO* h = _hardware->getElement(i);
-        res += "<tr><td>" + h->getName() + "</td><td>";
-        if(h->getType() == RELAY)
-            res += "RELAY";
-        else if(h->getType() == INPUT230V)
-            res += "INPUT230V";
-        else if(h->getType() == TELEMETRY)
-            res += "TELEMETRY";
-        else if(h->getType() == ONEWIRE)
-            res += "ONEWIRE";
-        res += "</td><td>" + h->getMqttTopic();
-        res += "</td><td>" + h->getWebDesc() + "</td></tr>\n";       
+        res += "<tr>";
+        res += "<td>" + h->getName() + "</td>";
+        res += "<td>" + h->getTxtType() + "</td>";
+        res += "<td>" + h->getMqttTopic() + "</td>";
+        res += "<td>" + h->getTxtDesc() + "</td>";
+        res += "</tr>\n";  
     }
     res += "</table>";
     return res;
@@ -383,10 +366,10 @@ String asyncSM::getOneWireInfo(){
     for (int i = 0; i<_hardware->getLen(); i++){
         HardwareIO* h = _hardware->getElement(i);
         if(h->getType() == ONEWIRE){
-            Hardware1WireSensor* s = (Hardware1WireSensor*)h;
+            HardwareOneWireSensor* s = (HardwareOneWireSensor*)h;
             for(int j = 0; j < s->getNumDevs(); j++){
-                res = res + "<tr><td>" + s->_getAddr(j) + "</td>";
-                res = res + "<td><input type=\"text\" name=\""+s->_getAddr(j)+"\" value=\"\"></td></tr>";
+                res = res + "<tr><td>" + s->getAddr(j) + "</td>";
+                res = res + "<td><input type=\"text\" name=\""+s->getAddr(j)+"\" value=\"\"></td></tr>";
             }
         }
     }

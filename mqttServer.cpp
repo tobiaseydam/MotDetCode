@@ -86,7 +86,7 @@ void mqttServerBuilder::_onMqttMessage(char* topic, char* payload, AsyncMqttClie
             Serial.print(" to ");
             Serial.println(payload);
             if(_hio->getType()==RELAY){
-                ((HardwareRelay*)_hio)->setStringState(payload);
+                _hio->handleMQTT(payload);
             }
         }
     }

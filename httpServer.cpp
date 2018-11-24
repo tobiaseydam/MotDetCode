@@ -122,7 +122,9 @@ String httpServerBuilder::_processor(const String &var){
     }else if (var == "MQTT_DEVNAME"){
         return asyncSM::getInstance()->getMqttDevName();
     }else if (var == "HARDWAREINFO"){
-        return asyncSM::getInstance()->getWebHardwareInfo();
+        String s = String(asyncSM::getInstance()->getWebHardwareInfo());
+        Serial.println(s);
+        return s;
     }else if (var == "ONEWIREINFO"){
         return asyncSM::getInstance()->getOneWireInfo();
     }
