@@ -120,7 +120,6 @@ boolean Hardware230VSensor::hasChanged(){
 }
 
 void Hardware230VSensor::read(){
-    Serial.println(getState());
     if(lastState != getState()){
         changed = true;
         lastState = getState();
@@ -137,7 +136,6 @@ Hardware1WireSensor::Hardware1WireSensor(int pin, String name, String mqttFragme
     _mqttFragment = mqttFragment;
     _type = ONEWIRE;
     _webDesc = String("1Wire Sensor, nur lesen");
-    //pinMode(pin, INPUT_PULLUP);
     ds = new OneWire(_pin);
     for(byte j = 0; j<16; j++){
         if (!ds->search(addr[j])) {
@@ -195,6 +193,19 @@ float Hardware1WireSensor::_getSensorValue(byte k){
     Tc_100 = (6 * TReading) + TReading / 4;    // mal (100 * 0.0625) oder 6.25
     /* Für DS18S20 folgendes verwenden Tc_100 = (TReading*100/2);    */
     return Tc_100/100.0;  // Ganzzahlen und Brüche trennen
+    
+}
+
+String Hardware1WireSensor::_getAddr(byte k){
+    String s = "";
+    const char* digits = "0123456789ABCDEF";
+    for ( int i = 0; i < 8; i++) {
+        if(i>0){
+            s = s + "_";
+        }
+        s = s + digits[(addr[k][i]&0xF0)>>4] + digits[(addr[k][i]&0x0F)];
+    }
+    return s;
 }
 
 String Hardware1WireSensor::getValue(){
@@ -211,7 +222,7 @@ String Hardware1WireSensor::getValue(){
     Serial.print(present,HEX);
     Serial.print(" ");
     
-    for ( int i = 0; i < 9; i++) {           // 9 bytes
+    for (int i = 0; i < 9; i++) {           // 9 bytes
         data[i] = ds->read();
         Serial.print(data[i], HEX);
         Serial.print(" ");
@@ -219,11 +230,23 @@ String Hardware1WireSensor::getValue(){
     Serial.print(" CRC=");
     Serial.print( OneWire::crc8( data, 8), HEX);
     Serial.println();
-    return String(_getSensorValue(0));
+    //return String(_getSensorValue(0));
+    String s = "";
+    for (int i = 0; i < numDev; i++){
+        s = s + _getAddr(i);
+        if(i<numDev-1){
+            s = s + "\n";
+        }
+    }
+    return s;
 }
 
 String Hardware1WireSensor::getStringState(){
     return String("");
+}
+
+byte Hardware1WireSensor::getNumDevs(){
+    return numDev;
 }
 
 
@@ -251,9 +274,9 @@ HardwareList::HardwareList(){
     _list[2] = new HardwareTele("RSSI", "rssi", [](){return String(WiFi.RSSI());}, "WiFi-Signalstaerke");
     _list[3] = new HardwareTele("Temperatur", "temperature", [](){return String((temprature_sens_read()-32)/1.8);}, "WiFi-Signalstaerke");
     _list[4] = new Hardware230VSensor(15, "Sensor 230V 1", "sensor1");
-    _list[5] = new Hardware230VSensor( 2, "Sensor 230V 1", "sensor2");
-    _list[6] = new Hardware230VSensor( 0, "Sensor 230V 1", "sensor3");
-    _list[7] = new Hardware230VSensor( 4, "Sensor 230V 1", "sensor4");
+    _list[5] = new Hardware230VSensor( 2, "Sensor 230V 2", "sensor2");
+    _list[6] = new Hardware230VSensor( 0, "Sensor 230V 3", "sensor3");
+    _list[7] = new Hardware230VSensor( 4, "Sensor 230V 4", "sensor4");
     _list[8] = new Hardware1WireSensor( 5, "OneWire", "onewire");
 }
 

@@ -320,6 +320,13 @@ String asyncSM::getMqttDevName(){
     return res;
 }
 
+String asyncSM::getMqttOneWireName(String addr){
+    JsonObject& mqttdata = tools::loadJsonFile(MQTT_FILE);
+    char name[32];
+    strncpy(name, mqttdata[addr], sizeof(mqttdata[addr]));
+    return String(name);
+}
+
 String asyncSM::getMqttTimerIntervall(){
     return String(getMqttTimerIntervallSeconds());
 }
@@ -362,8 +369,26 @@ String asyncSM::getWebHardwareInfo(){
             res += "INPUT230V";
         else if(h->getType() == TELEMETRY)
             res += "TELEMETRY";
+        else if(h->getType() == ONEWIRE)
+            res += "ONEWIRE";
         res += "</td><td>" + h->getMqttTopic();
         res += "</td><td>" + h->getWebDesc() + "</td></tr>\n";       
+    }
+    res += "</table>";
+    return res;
+}
+
+String asyncSM::getOneWireInfo(){
+    String res = "<table><tr><td>Sensor</td><td>MQTT-Fragment</td></tr>\n";
+    for (int i = 0; i<_hardware->getLen(); i++){
+        HardwareIO* h = _hardware->getElement(i);
+        if(h->getType() == ONEWIRE){
+            Hardware1WireSensor* s = (Hardware1WireSensor*)h;
+            for(int j = 0; j < s->getNumDevs(); j++){
+                res = res + "<tr><td>" + s->_getAddr(j) + "</td>";
+                res = res + "<td><input type=\"text\" name=\""+s->_getAddr(j)+"\" value=\"\"></td></tr>";
+            }
+        }
     }
     res += "</table>";
     return res;

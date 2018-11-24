@@ -73,6 +73,8 @@
             Hardware1WireSensor(int pin, String name, String mqttFragment);
             String getValue();
             String getStringState();
+            byte getNumDevs();
+            String _getAddr(byte k);
     };
 
     class HardwareTele: public HardwareIO{

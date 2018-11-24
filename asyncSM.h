@@ -113,9 +113,11 @@
             String getMqttTimerIntervall();
             int getMqttTimerIntervallSeconds();
             Ticker* getMqttTimer();
+            String getMqttOneWireName(String addr);
 
             String getHardwareInfo();
             String getWebHardwareInfo();
+            String getOneWireInfo();
 
             asyncSM();
     };
