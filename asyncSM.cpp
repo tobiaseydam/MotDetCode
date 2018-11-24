@@ -257,9 +257,9 @@ void asyncSM::saveMqttConfig(){
     root["PASS"] = _mqttConfig.pass;
     root["DEVNAME"] = _mqttConfig.devname;
     String s = "/mqtt.txt";
-    tools::saveJsonFile(s, &root); 
-} 
- 
+    tools::saveJsonFile(s, &root);
+}
+
 void asyncSM::setWifiSSID(String ssid){
     strncpy(_wifiConfig.ssid, ssid.c_str(), sizeof(_wifiConfig.ssid));
 }
