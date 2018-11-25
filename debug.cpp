@@ -22,6 +22,10 @@ void debug::logln(String s){
     logln(s,1);
 }
 
+void debug::logln(byte s){
+    logln(String(s),1);
+}
+
 void debug::logln(String s, int dbglvl){
     if((DEBUGLVL>0)&(DEBUGLVL>dbglvl)){
         Serial.println(s);

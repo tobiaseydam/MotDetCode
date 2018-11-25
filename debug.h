@@ -9,7 +9,7 @@
      *  ...
      *  3   viele Debugausgaben
      */
-    #define DEBUGLVL    3
+    #define DEBUGLVL    0
 
     class debug{
         public:
@@ -17,6 +17,7 @@
             static void log(String s);
             static void log(String s, int dbglvl);
             static void logln(String s);
+            static void logln(byte s);
             static void logln(String s, int dbglvl);
     };
 

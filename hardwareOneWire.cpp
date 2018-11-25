@@ -14,8 +14,7 @@ HardwareOneWireSensor::HardwareOneWireSensor(int pin, String name, String mqttFr
     for(byte i = 0; i<_maxDevs; i++){
         if (!_ds->search(_addr[i])) {
             _numDev = i;
-            Serial.print("Keine weiteren Addressen.\n");
-            Serial.println(i);
+            debug::logln("Keine weiteren Addressen.\n");
             _ds->reset_search();
             return;
         }
@@ -31,6 +30,8 @@ String HardwareOneWireSensor::getTxtState(){
     for(int i = 0; i<_numDev; i++){
         res += "Sensor: ";
         res += getAddr(i);
+        res += " - Raw: ";
+        res += getRawValue(i);
         res += " - Value: ";
         res += String(getSensorValue(i));
         res += "\n";
@@ -54,24 +55,24 @@ String HardwareOneWireSensor::getAddr(byte k){
     return res;
 }
 
+String HardwareOneWireSensor::getRawValue(byte k){
+    String res = "";
+    const char* digits = "0123456789ABCDEF";
+    for(int i = 0; i < 12; i++){
+        if(i>0){
+            res = res + " ";
+        }
+        res = res + digits[(_data[k][i]&0xF0)>>4] + digits[(_data[k][i]&0x0F)];
+    }
+    return res;
+}
+
 float HardwareOneWireSensor::getSensorValue(byte k){
     // aktuell nur DS18S20
-    byte data[12];
-    byte present = 0;
-    _ds->reset();
-    _ds->select(_addr[k]);
-    _ds->write(0x44,1);
-    delay(1000); 
-    present = _ds->reset();
-    _ds->select(_addr[k]);    
-    _ds->write(0xBE);
-    for ( int i = 0; i < 9; i++) {
-        data[i] = _ds->read();
-    }
     int HighByte, LowByte, TReading, SignBit, Tc_100;
 
-    LowByte = data[0];
-    HighByte = data[1];
+    LowByte = _data[k][0];
+    HighByte = _data[k][1];
     TReading = (HighByte << 8) + LowByte;
     SignBit = TReading & 0x8000;  // test most sig bit
     if (SignBit){
@@ -80,6 +81,22 @@ float HardwareOneWireSensor::getSensorValue(byte k){
     Tc_100 = (6 * TReading) + TReading / 4;    // mal (100 * 0.0625) oder 6.25
     /* Für DS18S20 folgendes verwenden Tc_100 = (TReading*100/2);    */
     return Tc_100/100.0;  // Ganzzahlen und Brüche trennen
+}
+
+void HardwareOneWireSensor::readSensors(){
+    for(byte i = 0; i<_maxDevs; i++){
+        byte present = 0;
+        _ds->reset();
+        _ds->select(_addr[i]);
+        _ds->write(0x44,1);
+        delay(1000); 
+        present = _ds->reset();
+        _ds->select(_addr[i]);    
+        _ds->write(0xBE);
+        for ( int j = 0; j < 9; j++) {
+            _data[i][j] = _ds->read();
+        }
+    }
 }
 
 void HardwareOneWireSensor::handleMQTT(String payload){
@@ -91,8 +108,9 @@ void HardwareOneWireSensor::publishSensors(){
         String topic = getMqttFragment(0);
         topic += "/" + getMqttFragment(1);
         topic += "/" + asyncSM::getInstance()->getMqttOneWireName(getAddr(i));
-        Serial.println(topic);
-        Serial.println(String(getSensorValue(i)));
-        asyncSM::getInstance()->getMqttClient()->publish(topic.c_str(), 1, true, String(getSensorValue(i)).c_str());
+        debug::logln(topic);
+        String payload = String(getSensorValue(i));
+        debug::logln(payload);
+        asyncSM::getInstance()->getMqttClient()->publish(topic.c_str(), 1, true, payload.c_str());
     }
 }

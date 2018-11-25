@@ -43,7 +43,7 @@ asyncSM::asyncSM(void){
     _httpServer = new AsyncWebServer(80);
     _mqttClient = new AsyncMqttClient();
     _hardware = new HardwareList();
-    Serial.println("AsyncSM created");
+    debug::logln("AsyncSM created");
 }
 
 void asyncSM::_nextStep(){
@@ -140,7 +140,7 @@ void asyncSM::_wifiOpenAccessPoint(){
     const char *pass = "WIFI_AP_PASS";
     WiFi.softAP(ssid);
  
-    Serial.println(WiFi.softAPIP());
+    debug::logln(WiFi.softAPIP());
     _state = WIFI_WAIT_FOR_CONFIG;
     return;
 }
@@ -179,7 +179,7 @@ void asyncSM::_mqttLogin(){
     mqttServerBuilder::init();
     _mqttClient->setCredentials("pi", "raspberry");
     _mqttClient->connect();
-    _mqttTimer->attach(10, _handleTeleHardware); 
+    _mqttTimer->attach(30, _handleTeleHardware); 
     _mqttTimer2->attach(1, _handleSensorHardware); 
     _runningState = PAUSED;
     return;
@@ -192,7 +192,7 @@ void asyncSM::_mainHandleMqtt(){
 void asyncSM::_loadWifiConfig(){
     JsonObject& data = tools::loadJsonFile(WIFI_FILE);
     for (auto kv : data) {
-        Serial.println(kv.key + String(" - ") + kv.value.as<char*>());
+        debug::logln(kv.key + String(" - ") + kv.value.as<char*>());
         _wifiConfigMap[kv.key] = kv.value.as<char*>();
     }
 }
@@ -200,7 +200,7 @@ void asyncSM::_loadWifiConfig(){
 void asyncSM::_loadMqttConfig(){
     JsonObject& data = tools::loadJsonFile(MQTT_FILE);
     for (auto kv : data) {
-        Serial.println(kv.key + String(" - ") + kv.value.as<char*>());
+        debug::logln(kv.key + String(" - ") + kv.value.as<char*>());
         _mqttConfigMap[kv.key] = kv.value.as<char*>();
     }
 }
@@ -211,12 +211,13 @@ void asyncSM::_handleTeleHardware(){
         for(int i = 0; i < _hwl->getLen(); i++){
             HardwareIO* h = _hwl->getElement(i);
             if(h->isConstUpdate()){
-                Serial.println(h->getMqttTopic().c_str());
-                Serial.println(h->getTxtState().c_str());
-                asyncSM::getInstance()->_mqttClient->publish(h->getMqttTopic().c_str(), 1, true, h->getTxtState().c_str());
                 if(h->getType() == ONEWIRE){
+                    ((HardwareOneWireSensor*) h)->readSensors();
                     ((HardwareOneWireSensor*) h)->publishSensors();
                 }
+                debug::logln(h->getMqttTopic().c_str());
+                debug::logln(h->getTxtState().c_str());
+                asyncSM::getInstance()->_mqttClient->publish(h->getMqttTopic().c_str(), 1, true, h->getTxtState().c_str());
             }
         }
     }
@@ -254,16 +255,16 @@ void asyncSM::saveMqttConfig(){
     for(auto kv : (_mqttConfigMap)){
         root[kv.first] = kv.second;
     }
-    String s = "/mqtt2.txt";
+    String s = "/mqtt.txt";
     tools::saveJsonFile(s, &root);
 }
 
 
 String asyncSM::getMqttOneWireName(String addr){
     JsonObject& mqttdata = tools::loadJsonFile(MQTT_FILE);
-    Serial.println(addr);
+    debug::logln(addr);
     String name = getMqttConfigKey("ONEWIRE " + addr);
-    Serial.println(name);
+    debug::logln(name);
     return String(name);
 }
 

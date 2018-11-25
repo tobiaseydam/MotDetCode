@@ -11,7 +11,7 @@
     #include <map>
 
     #define WIFI_FILE       "/wifi.txt"
-    #define MQTT_FILE       "/mqtt2.txt"
+    #define MQTT_FILE       "/mqtt.txt"
     #define WIFI_TIMEOUT    5
     #define WIFI_AP_SSID    "ESP32"
     #define WIFI_AP_PASS    "MotDet"

@@ -105,6 +105,7 @@
             static const byte _maxDevs = 16;      // Maximale Anzahl angeschlossener Sensoren
             byte _addr[_maxDevs][8];        // Array mit Adressen der Sensoren
             byte _numDev = 0;               // Anzahl der angeschlossenen Sensoren
+            byte _data[_maxDevs][12];
         public: 
             HardwareOneWireSensor(int pin, String name, String mqttFragment2);
                                             // Konstruktor
@@ -114,7 +115,9 @@
             String getAddr(byte k);         // Gibt die Adresse des i-ten Sensors Zurück
             float getSensorValue(byte k);   // Gibt den Wert des i-ten Sensors Zurück
             void handleMQTT(String payload);// macht nichts
+            String getRawValue(byte k);     // Sensor-Rohdaten ausgeben
             void publishSensors();          // Alle Sensordaten senden
+            void readSensors();             // Sensoren auslesen;
     };
 
     // Eigene Funktionen des ESP32, z.B. RSSI oder Temperatur
