@@ -85,3 +85,14 @@ float HardwareOneWireSensor::getSensorValue(byte k){
 void HardwareOneWireSensor::handleMQTT(String payload){
     return;
 }
+
+void HardwareOneWireSensor::publishSensors(){
+    for(int i = 0; i<_numDev; i++){
+        String topic = getMqttFragment(0);
+        topic += "/" + getMqttFragment(1);
+        topic += "/" + asyncSM::getInstance()->getMqttOneWireName(getAddr(i));
+        Serial.println(topic);
+        Serial.println(String(getSensorValue(i)));
+        asyncSM::getInstance()->getMqttClient()->publish(topic.c_str(), 1, true, String(getSensorValue(i)).c_str());
+    }
+}

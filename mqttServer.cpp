@@ -102,7 +102,7 @@ void mqttServerBuilder::init(){
     asyncSM *sm = asyncSM::getInstance();
     AsyncMqttClient *client = sm->getMqttClient();
 
-    IPAddress ip = tools::strToIP(sm->getMqttServer());
+    IPAddress ip = tools::strToIP(sm->getMqttConfigKey("SERVER"));
     client->setServer(ip, 1883);
     asyncSM::getInstance()->getMqttClient()->onConnect(_onMqttConnect);
     asyncSM::getInstance()->getMqttClient()->onDisconnect(_onMqttDisconnect);

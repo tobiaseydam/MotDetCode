@@ -19,15 +19,11 @@ void tools::saveJsonFile(String filename, JsonObject *json){
 }
 
 JsonObject& tools::loadJsonFile(String filename){
-    debug::log("loading JSON file: ", 2);
-    debug::logln(filename,2);
     File file = SPIFFS.open(filename, "r");
-    DynamicJsonBuffer jsonBuffer;
+    StaticJsonBuffer<2000> jsonBuffer;
     if(!file){
-        debug::logln(" not found", 2);
         return jsonBuffer.createObject();
     }else{
-        debug::logln(" done", 2);
         return jsonBuffer.parseObject(file);
     }
 }

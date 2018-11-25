@@ -11,7 +11,6 @@ void setup()
 {
 	asyncSM* _asyncSM = asyncSM::getInstance();
 	httpServerBuilder::init();
-	mqttServerBuilder::init();
 	_asyncSM->begin(NULL);
 	HardwareList* _hwl = asyncSM::getInstance()->_hardware;
 } 

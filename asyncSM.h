@@ -6,33 +6,20 @@
     #include <WString.h>
     #include <Ticker.h>
     #include "debug.h"
+    #include "tools.h"
     #include "hardwareManager.h"
+    #include <map>
 
     #define WIFI_FILE       "/wifi.txt"
-    #define MQTT_FILE       "/mqtt.txt"
+    #define MQTT_FILE       "/mqtt2.txt"
     #define WIFI_TIMEOUT    5
     #define WIFI_AP_SSID    "ESP32"
     #define WIFI_AP_PASS    "MotDet"
 
     class asyncSM{
         private:
-            struct wifiConfig {
-                char ssid[64];
-                char pass[64];
-                bool loaded = false;
-            };
-
-            wifiConfig _wifiConfig;
-
-            struct mqttConfig {
-                char server[20];
-                char user[64];
-                char pass[64];
-                char devname[64];
-                bool loaded = false;
-            };
-
-            mqttConfig _mqttConfig;
+            std::map<String, String> _wifiConfigMap;
+            std::map<String, String> _mqttConfigMap;
 
             enum eSMState {
                 START, 
@@ -48,21 +35,20 @@
                 MAIN_HANDLE_MQTT,
 
                 UNRESOLVABLE_ERROR
-                };
+            };
 
             enum eSMRunningState {
                 NOT_STARTED, 
                 RUNNING, 
                 PAUSED, 
                 ERROR
-                };
+            };
 
             eSMState _state = START;
             eSMRunningState _runningState = NOT_STARTED;
 
             AsyncWebServer* _httpServer;
             AsyncMqttClient* _mqttClient;
-            
 
             Ticker* _mqttTimer = new Ticker();
             Ticker* _mqttTimer2 = new Ticker();
@@ -96,21 +82,7 @@
             
             void saveWifiConfig();
             void saveMqttConfig();
-            
-            void setWifiSSID(String ssid);
-            void setWifiPass(String pass);
-            void setMqttServer(String server);
-            void setMqttUser(String user);
-            void setMqttPass(String pass);
-            void setMqttDevName(String devname);
-            
-            String getWifiSSID();
-            String getWifiPass();
-            String getMqttServer();
-            String getMqttUser();
-            String getMqttPass();
-            String getMqttDevName();
-            String getMqttTimerIntervall();
+     
             int getMqttTimerIntervallSeconds();
             Ticker* getMqttTimer();
             String getMqttOneWireName(String addr);
@@ -118,6 +90,11 @@
             String getHardwareInfo();
             String getWebHardwareInfo();
             String getOneWireInfo();
+
+            String getWifiConfigKey(String key);
+            void setWifiConfigKey(String key, String val);
+            String getMqttConfigKey(String key);
+            void setMqttConfigKey(String key, String val);
 
             asyncSM();
     };

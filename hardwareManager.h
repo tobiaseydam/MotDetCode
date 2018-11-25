@@ -81,8 +81,8 @@
         protected:
             boolean _changed = false;       // true, wenn sich der Status seit dem letzten auslesen geändert hat
             eState _lastState = OFF;        // letzter gelesener Zustand
-            void _read();                   // aktuelen Wert lesen und _changed setzen
         public: 
+            void read();                   // aktuelen Wert lesen und _changed setzen
             eState getState();              // aktuellen Zustand lesen
             String getTxtState();           // aktuellen Zustand lesen und als Text zurückgeben
             boolean hasChanged();           // siehe _changed
@@ -114,6 +114,7 @@
             String getAddr(byte k);         // Gibt die Adresse des i-ten Sensors Zurück
             float getSensorValue(byte k);   // Gibt den Wert des i-ten Sensors Zurück
             void handleMQTT(String payload);// macht nichts
+            void publishSensors();          // Alle Sensordaten senden
     };
 
     // Eigene Funktionen des ESP32, z.B. RSSI oder Temperatur

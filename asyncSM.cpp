@@ -7,7 +7,7 @@
 #include "asyncSM.h"
 #include "debug.h"
 #include "tools.h"
-
+#include "mqttServer.h"
 asyncSM* asyncSM::asyncSMInstance;
 
 asyncSM* asyncSM::getInstance(){
@@ -112,9 +112,9 @@ void asyncSM::_wifiLogin(){
 
     debug::logln("connectiong to:");
     debug::log("  SSID: ");
-    debug::logln(_wifiConfig.ssid);
+    debug::logln(getWifiConfigKey("SSID"));
 
-    WiFi.begin(_wifiConfig.ssid, _wifiConfig.pass);
+    WiFi.begin(getWifiConfigKey("SSID").c_str(), getWifiConfigKey("PASS").c_str());
     long t0 = millis();
 
     while(WiFi.status() != WL_CONNECTED){
@@ -175,9 +175,11 @@ void asyncSM::_mqttLookForData(){
 
 void asyncSM::_mqttLogin(){
     debug::logln("entering: sm_mqtt_login");
+    _loadMqttConfig();
+    mqttServerBuilder::init();
     _mqttClient->setCredentials("pi", "raspberry");
     _mqttClient->connect();
-    _mqttTimer->attach(getMqttTimerIntervallSeconds(), _handleTeleHardware); 
+    _mqttTimer->attach(10, _handleTeleHardware); 
     _mqttTimer2->attach(1, _handleSensorHardware); 
     _runningState = PAUSED;
     return;
@@ -188,21 +190,19 @@ void asyncSM::_mainHandleMqtt(){
 }
 
 void asyncSM::_loadWifiConfig(){
-    if(_wifiConfig.loaded) return;
-    JsonObject& wifidata = tools::loadJsonFile(WIFI_FILE);
-    strncpy(_wifiConfig.ssid, wifidata["SSID"], sizeof(_wifiConfig.ssid));
-    strncpy(_wifiConfig.pass, wifidata["PASS"], sizeof(_wifiConfig.pass));
-    _wifiConfig.loaded = true;
+    JsonObject& data = tools::loadJsonFile(WIFI_FILE);
+    for (auto kv : data) {
+        Serial.println(kv.key + String(" - ") + kv.value.as<char*>());
+        _wifiConfigMap[kv.key] = kv.value.as<char*>();
+    }
 }
 
 void asyncSM::_loadMqttConfig(){
-    if(_mqttConfig.loaded) return;
-    JsonObject& mqttdata = tools::loadJsonFile(MQTT_FILE);
-    strncpy(_mqttConfig.server, mqttdata["SERVER"], sizeof(_mqttConfig.server));
-    strncpy(_mqttConfig.user, mqttdata["USER"], sizeof(_mqttConfig.user));
-    strncpy(_mqttConfig.pass, mqttdata["PASS"], sizeof(_mqttConfig.pass));
-    strncpy(_mqttConfig.devname, mqttdata["DEVNAME"], sizeof(_mqttConfig.devname));
-    _mqttConfig.loaded = true;
+    JsonObject& data = tools::loadJsonFile(MQTT_FILE);
+    for (auto kv : data) {
+        Serial.println(kv.key + String(" - ") + kv.value.as<char*>());
+        _mqttConfigMap[kv.key] = kv.value.as<char*>();
+    }
 }
 
 void asyncSM::_handleTeleHardware(){
@@ -214,6 +214,9 @@ void asyncSM::_handleTeleHardware(){
                 Serial.println(h->getMqttTopic().c_str());
                 Serial.println(h->getTxtState().c_str());
                 asyncSM::getInstance()->_mqttClient->publish(h->getMqttTopic().c_str(), 1, true, h->getTxtState().c_str());
+                if(h->getType() == ONEWIRE){
+                    ((HardwareOneWireSensor*) h)->publishSensors();
+                }
             }
         }
     }
@@ -226,6 +229,7 @@ void asyncSM::_handleSensorHardware(){
             HardwareIO* h = _hwl->getElement(i);
             if(h->getType() == INPUT230V){
                 HardwareDigitalSensorPin* t = (HardwareDigitalSensorPin*)h;
+                t->read();
                 if(t->hasChanged()){
                     asyncSM::getInstance()->_mqttClient->publish(t->getMqttTopic().c_str(), 1, true, t->getTxtState().c_str());
                 }
@@ -235,98 +239,32 @@ void asyncSM::_handleSensorHardware(){
 }
 
 void asyncSM::saveWifiConfig(){
-    DynamicJsonBuffer jsonBuffer;
+    StaticJsonBuffer<500> jsonBuffer;
     JsonObject& root = jsonBuffer.createObject();
-    root["SSID"] = _wifiConfig.ssid;
-    root["PASS"] = _wifiConfig.pass;
+    for(auto kv : _wifiConfigMap){
+        root[kv.first] = kv.second;
+    }
     String s = "/wifi.txt";
     tools::saveJsonFile(s, &root);
 }
 
 void asyncSM::saveMqttConfig(){
-    DynamicJsonBuffer jsonBuffer;
+    StaticJsonBuffer<500> jsonBuffer;
     JsonObject& root = jsonBuffer.createObject();
-    root["SERVER"] = _mqttConfig.server;
-    root["USER"] = _mqttConfig.user;
-    root["PASS"] = _mqttConfig.pass;
-    root["DEVNAME"] = _mqttConfig.devname;
-    String s = "/mqtt.txt";
+    for(auto kv : (_mqttConfigMap)){
+        root[kv.first] = kv.second;
+    }
+    String s = "/mqtt2.txt";
     tools::saveJsonFile(s, &root);
 }
 
-void asyncSM::setWifiSSID(String ssid){
-    strncpy(_wifiConfig.ssid, ssid.c_str(), sizeof(_wifiConfig.ssid));
-}
-
-String asyncSM::getWifiSSID(){
-    _loadWifiConfig();
-    String res = _wifiConfig.ssid;
-    return res;
-}
-
-void asyncSM::setWifiPass(String pass){
-    strncpy(_wifiConfig.pass, pass.c_str(), sizeof(_wifiConfig.pass));
-}
-
-String asyncSM::getWifiPass(){
-    _loadWifiConfig();
-    String res = _wifiConfig.pass;
-    return res;
-}
-
-void asyncSM::setMqttServer(String server){
-    strncpy(_mqttConfig.server, server.c_str(), sizeof(_mqttConfig.server));
-}
-
-String asyncSM::getMqttServer(){
-    _loadMqttConfig();
-    String res = _mqttConfig.server;
-    return res;
-}
-
-void asyncSM::setMqttUser(String user){
-    strncpy(_mqttConfig.user, user.c_str(), sizeof(_mqttConfig.user));
-}
-
-String asyncSM::getMqttUser(){
-    _loadMqttConfig();
-    String res = _mqttConfig.user;
-    return res;
-}
-
-void asyncSM::setMqttPass(String pass){
-    strncpy(_mqttConfig.pass, pass.c_str(), sizeof(_mqttConfig.pass));
-}
-
-String asyncSM::getMqttPass(){
-    _loadMqttConfig();
-    String res = _mqttConfig.pass;
-    return res;
-}
-
-void asyncSM::setMqttDevName(String devname){
-    strncpy(_mqttConfig.devname, devname.c_str(), sizeof(_mqttConfig.devname));
-}
-
-String asyncSM::getMqttDevName(){
-    _loadMqttConfig();
-    String res = _mqttConfig.devname;
-    return res;
-}
 
 String asyncSM::getMqttOneWireName(String addr){
     JsonObject& mqttdata = tools::loadJsonFile(MQTT_FILE);
-    char name[32];
-    strncpy(name, mqttdata[addr], sizeof(mqttdata[addr]));
+    Serial.println(addr);
+    String name = getMqttConfigKey("ONEWIRE " + addr);
+    Serial.println(name);
     return String(name);
-}
-
-String asyncSM::getMqttTimerIntervall(){
-    return String(getMqttTimerIntervallSeconds());
-}
-
-int asyncSM::getMqttTimerIntervallSeconds(){
-    return 10;
 }
 
 Ticker* asyncSM::getMqttTimer(){
@@ -362,17 +300,33 @@ String asyncSM::getWebHardwareInfo(){
 }
 
 String asyncSM::getOneWireInfo(){
-    String res = "<table><tr><td>Sensor</td><td>MQTT-Fragment</td></tr>\n";
+    String res = "";
     for (int i = 0; i<_hardware->getLen(); i++){
         HardwareIO* h = _hardware->getElement(i);
         if(h->getType() == ONEWIRE){
             HardwareOneWireSensor* s = (HardwareOneWireSensor*)h;
             for(int j = 0; j < s->getNumDevs(); j++){
                 res = res + "<tr><td>" + s->getAddr(j) + "</td>";
-                res = res + "<td><input type=\"text\" name=\""+s->getAddr(j)+"\" value=\"\"></td></tr>";
+                res = res + "<td><input type=\"text\" name=\"ONEWIRE "+s->getAddr(j)+"\" value=\""+getMqttOneWireName(s->getAddr(j))+"\"></td></tr>";
             }
         }
     }
-    res += "</table>";
+    res += "";
     return res;
+}
+
+String asyncSM::getWifiConfigKey(String key){
+    return _wifiConfigMap[key];
+}
+
+void asyncSM::setWifiConfigKey(String key, String val){
+    _wifiConfigMap[key] = val;
+}
+
+String asyncSM::getMqttConfigKey(String key){
+    return (_mqttConfigMap)[key];
+}
+
+void asyncSM::setMqttConfigKey(String key, String val){
+    (_mqttConfigMap)[key] = val;
 }

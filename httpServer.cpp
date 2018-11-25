@@ -69,8 +69,8 @@ void httpServerBuilder::_handleUpdate(AsyncWebServerRequest *request){
             if(p->value().equals("wifi")){
                 AsyncWebParameter *ssid = request->getParam(1);
                 AsyncWebParameter *pass = request->getParam(2);
-                asyncSM::getInstance()->setWifiSSID(ssid->value());
-                asyncSM::getInstance()->setWifiPass(pass->value());
+                asyncSM::getInstance()->setWifiConfigKey("SSID",ssid->value());
+                asyncSM::getInstance()->setWifiConfigKey("PASS",pass->value());
                 asyncSM::getInstance()->saveWifiConfig();
                 request->redirect("/SPIFFS");
                 ESP.restart();
@@ -79,10 +79,18 @@ void httpServerBuilder::_handleUpdate(AsyncWebServerRequest *request){
                 AsyncWebParameter *user = request->getParam(2);
                 AsyncWebParameter *pass = request->getParam(3);
                 AsyncWebParameter *devname = request->getParam(4);
-                asyncSM::getInstance()->setMqttServer(server->value());
-                asyncSM::getInstance()->setMqttUser(user->value());
-                asyncSM::getInstance()->setMqttPass(pass->value());
-                asyncSM::getInstance()->setMqttDevName(devname->value());
+                asyncSM::getInstance()->setMqttConfigKey("SERVER",server->value());
+                asyncSM::getInstance()->setMqttConfigKey("USER",user->value());
+                asyncSM::getInstance()->setMqttConfigKey("PASS",pass->value());
+                asyncSM::getInstance()->setMqttConfigKey("DEVNAME",devname->value());
+                asyncSM::getInstance()->saveMqttConfig();
+                request->redirect("/SPIFFS");
+                ESP.restart();
+            }else if(p->value().equals("onewire")){
+                for(int i = 1; i<cntrParams; i++){
+                    AsyncWebParameter *param = request->getParam(i);
+                    asyncSM::getInstance()->setMqttConfigKey(param->name(),param->value());
+                }
                 asyncSM::getInstance()->saveMqttConfig();
                 request->redirect("/SPIFFS");
                 ESP.restart();
@@ -110,23 +118,23 @@ void httpServerBuilder::_handleUpload(AsyncWebServerRequest *request, String fil
 
 String httpServerBuilder::_processor(const String &var){
     if (var == "WIFI_SSID"){
-        return asyncSM::getInstance()->getWifiSSID();
+        return asyncSM::getInstance()->getWifiConfigKey("SSID");
     }else if (var == "WIFI_PASS"){
-        return asyncSM::getInstance()->getWifiPass();
+        return asyncSM::getInstance()->getWifiConfigKey("PASS");
     }else if (var == "MQTT_SERVER"){
-        return asyncSM::getInstance()->getMqttServer();
+        return asyncSM::getInstance()->getMqttConfigKey("SERVER");
     }else if (var == "MQTT_USER"){
-        return asyncSM::getInstance()->getMqttUser();
+        return asyncSM::getInstance()->getMqttConfigKey("USER");
     }else if (var == "MQTT_PASS"){
-        return asyncSM::getInstance()->getMqttPass();
+        return asyncSM::getInstance()->getMqttConfigKey("PASS");
     }else if (var == "MQTT_DEVNAME"){
-        return asyncSM::getInstance()->getMqttDevName();
+        return asyncSM::getInstance()->getMqttConfigKey("DEVNAME");
     }else if (var == "HARDWAREINFO"){
-        String s = String(asyncSM::getInstance()->getWebHardwareInfo());
-        Serial.println(s);
-        return s;
+        return String(asyncSM::getInstance()->getWebHardwareInfo());
     }else if (var == "ONEWIREINFO"){
         return asyncSM::getInstance()->getOneWireInfo();
+    }else if (var.startsWith("ONEWIRE ")){
+        return asyncSM::getInstance()->getMqttOneWireName(var.substring(9));
     }
 
     return String();

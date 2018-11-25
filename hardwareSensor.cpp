@@ -1,6 +1,6 @@
 #include "hardwareManager.h"
 
-void HardwareDigitalSensorPin::_read(){
+void HardwareDigitalSensorPin::read(){
     eState currentState;
     if(digitalRead(_pin) == HIGH){
         currentState = ON;
@@ -14,10 +14,12 @@ void HardwareDigitalSensorPin::_read(){
 }
 
 eState HardwareDigitalSensorPin::getState(){
+    _changed = false;
     return _lastState;
 }
 
 String HardwareDigitalSensorPin::getTxtState(){
+    _changed = false;
     switch (_lastState){
         case ON:  return String("ON");
         case OFF: return String("OFF");

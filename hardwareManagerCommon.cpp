@@ -21,7 +21,7 @@ String HardwareIO::getTxtDesc(){
 String HardwareIO::getMqttFragment(byte i){
     switch(i){
         case 0: return String(_mqttFragment0);
-        case 1: return String(asyncSM::getInstance()->getMqttDevName());
+        case 1: return String(asyncSM::getInstance()->getMqttConfigKey(String("DEVNAME")));
         case 2: return String(_mqttFragment2);
     }
     return String("NOT_DEFINED");
